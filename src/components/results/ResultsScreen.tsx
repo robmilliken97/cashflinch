@@ -64,31 +64,30 @@ export function ResultsScreen({
     return () => clearTimeout(timer);
   }, []);
 
-  const vehicleScore = Math.min(99, Math.round(burnScore * 1.2));
-  const relScore    = Math.min(99, Math.round(burnScore * 0.9));
-  const delusionVal = Math.min(99, Math.round(burnScore * 0.85));
+  const [m0, m1, m2] = result.metricScores as [number, number, number];
+  const [l0, l1, l2] = result.metricLabels as [string, string, string];
 
   const metrics = [
     {
-      label: "Relationship Risk™",
-      value: relScore,
-      desc: result.relationshipRisk,
-      colorClass: getMetricColor(relScore),
-      barClass: getBarColor(relScore),
+      label: l0,
+      value: m0,
+      desc: result.metric1,
+      colorClass: getMetricColor(m0),
+      barClass: getBarColor(m0),
     },
     {
-      label: "Vehicle Aggression Index™",
-      value: vehicleScore,
-      desc: result.vehicleAggression,
-      colorClass: getMetricColor(vehicleScore),
-      barClass: getBarColor(vehicleScore),
+      label: l1,
+      value: m1,
+      desc: result.metric2,
+      colorClass: getMetricColor(m1),
+      barClass: getBarColor(m1),
     },
     {
-      label: "Delusion Score™",
-      value: delusionVal,
-      desc: result.delusionScore,
-      colorClass: getMetricColor(delusionVal),
-      barClass: getBarColor(delusionVal),
+      label: l2,
+      value: m2,
+      desc: result.metric3,
+      colorClass: getMetricColor(m2),
+      barClass: getBarColor(m2),
     },
   ];
 

@@ -21,7 +21,7 @@ export const roastDatabase = [
     condition: (answers: any) =>
       answers.stress_spending?.points >= 16 && answers.convenience?.points >= 16,
     roast:
-      "You've built a stress-response that costs money. Somewhere there's a behavioral economist writing a paper about you specifically.",
+      "You spend more when you're stressed and more when things are good. Your spending has no downside trigger. That's not a coping mechanism — that's a ratchet with an emotional handle.",
     severity: "medium",
   },
 
@@ -83,7 +83,7 @@ export const roastDatabase = [
     condition: (answers: any) =>
       answers.future_reliance?.points >= 20 && answers.financial_plan?.points >= 18,
     roast:
-      "Your financial plan and your income plan are the same plan. That would be fine if it were a plan. It's currently more of a shared hope.",
+      "Your financial stability is contingent on a salary decision made by someone else, in a meeting you won't be in. That's not a plan — that's outsourced.",
     severity: "high",
   },
 
@@ -157,7 +157,7 @@ export const roastDatabase = [
     condition: (answers: any) =>
       answers.convenience?.points >= 22,
     roast:
-      "You've quietly built a subscription to your own convenience. It's billed daily, the terms are unclear, and you've accepted all of them.",
+      "You pay a consistent premium to avoid small friction. The friction was free. The premium is compounding.",
     severity: "medium",
   },
 

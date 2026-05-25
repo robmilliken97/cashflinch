@@ -10,19 +10,19 @@ export type BehavioralProfile = {
   insight: string;
   pattern: string;
   blindSpot: string;
-  relationshipRisk: string;
-  vehicleAggression: string;
-  delusionScore: string;
+  metric1: string;
+  metric2: string;
+  metric3: string;
+  metricLabels: [string, string, string];
+  metricScores: [number, number, number];
   survivability: string;
   financialPressure: string;
   risks: string[];
   recoveryLevers: RecoveryLever[];
 };
 
-// Max possible points across all 10 questions (worst answer on each)
 const MAX_POSSIBLE = 280;
 
-// Behavioral tag weights — higher = more alarming signal
 const TAG_WEIGHTS: Record<string, number> = {
   emotional_spender: 3,
   avoider: 3,
@@ -30,13 +30,12 @@ const TAG_WEIGHTS: Record<string, number> = {
   awareness_deficit: 2,
   lifestyle_drifter: 2,
   paycheck_dependent: 2,
-  optimist_bias: 1,
   future_reliant: 2,
+  optimist_bias: 1,
   convenience_addict: 1,
   status_spender: 1,
 };
 
-// Maps dominant behavioral tag → archetype key
 const TAG_TO_ARCHETYPE: Record<string, string> = {
   emotional_spender: "comfort_spender",
   avoider: "quiet_avoider",
@@ -50,29 +49,49 @@ const TAG_TO_ARCHETYPE: Record<string, string> = {
   status_spender: "status_investor",
 };
 
-const ARCHETYPES: Record<string, BehavioralProfile> = {
+// Returns [pressureScore, avoidanceScore, driftScore] scaled 0-99
+// based on actual behavioral signals in answers — not burnScore multipliers
+function calculateMetricScores(answers: Record<string, any>): [number, number, number] {
+  let pressure = 0, avoidance = 0, drift = 0;
+
+  Object.values(answers).forEach((a: any) => {
+    if (!a?.tags) return;
+    if (a.tags.some((t: string) => ["emotional_spender", "debt_normalized", "paycheck_dependent"].includes(t))) pressure++;
+    if (a.tags.some((t: string) => ["avoider", "awareness_deficit"].includes(t))) avoidance++;
+    if (a.tags.some((t: string) => ["lifestyle_drifter", "future_reliant", "optimist_bias", "convenience_addict", "status_spender"].includes(t))) drift++;
+  });
+
+  // Max possible: pressure=9, avoidance=7, drift=7 across 10 questions
+  return [
+    Math.min(99, Math.round((pressure / 9) * 99)),
+    Math.min(99, Math.round((avoidance / 7) * 99)),
+    Math.min(99, Math.round((drift / 7) * 99)),
+  ];
+}
+
+const ARCHETYPES: Record<string, Omit<BehavioralProfile, "metricScores" | "color">> = {
   comfort_spender: {
     level: "Emotionally Funded",
     archetype: "The Comfort Spender",
-    color: "text-orange-500",
     insight:
       "Spending is your fastest available tool for emotional regulation. It works in the short term, which is exactly why the habit is so durable — and so expensive over time.",
     pattern: "Emotional Regulation Through Spending",
     blindSpot:
       "The purchases don't feel like a problem because they solve a real one. The issue is the cost compounds invisibly until one difficult month makes the total undeniable.",
-    relationshipRisk:
-      "Your close relationships likely absorb the financial friction of your emotional recovery without a full picture of what it actually costs.",
-    vehicleAggression:
-      "Purchases made under emotional pressure tend to stay in your life long after the feeling that justified them has passed.",
-    delusionScore:
-      "You probably understand this pattern intellectually. The gap between understanding it and stopping it is where the real cost lives.",
+    metricLabels: ["Emotional Spend Index™", "Avoidance Tendency™", "Lifestyle Drift™"],
+    metric1:
+      "Your spending is functionally linked to your emotional state. The index reflects how consistently stress converts into transactions — a pattern that operates independently of your income.",
+    metric2:
+      "You tend to avoid reviewing the financial impact of stress-driven purchases. The pattern is easier to sustain when the numbers stay abstract.",
+    metric3:
+      "Comfort spending quietly elevates the baseline over time. What starts as relief becomes expectation, then fixed cost.",
     survivability: "UNSTABLE",
     financialPressure: "HIGH",
     risks: [
       "Emotional spending scales with stress, not income — good months don't reliably solve it",
       "Rough periods generate financial damage that outlasts the emotion that caused it",
       "Relief-based purchasing is structurally indistinguishable from compulsion at the account level",
-      "Your 'I deserve this' logic consistently activates before your budget awareness does",
+      "Your 'I deserve this' logic activates before your budget awareness does, every time",
     ],
     recoveryLevers: [
       {
@@ -88,8 +107,8 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
         body: "The goal isn't to feel nothing — it's to find regulation that doesn't compound financially over time.",
       },
       {
-        lead: "One spending boundary this month.",
-        body: "Pick the most frequent emotional spend category and put a dollar cap on it for 30 days. One constraint, not a full overhaul.",
+        lead: "One category cap this month.",
+        body: "Pick the most frequent emotional spend category and put a dollar limit on it for 30 days. One constraint. Not a full overhaul.",
       },
     ],
   },
@@ -97,42 +116,42 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
   quiet_avoider: {
     level: "Strategically Unaware",
     archetype: "The Quiet Avoider",
-    color: "text-orange-500",
     insight:
       "You have a working theory that things are probably fine. You've decided, more or less deliberately, not to stress-test it.",
     pattern: "Strategic Financial Avoidance",
     blindSpot:
       "Avoidance doesn't stabilize your finances — it removes the feedback loop that would let you course-correct before a crisis. The problems don't pause because you stopped looking.",
-    relationshipRisk:
-      "Financial avoidance creates asymmetry in relationships. You've made commitments you haven't fully measured, and someone else may eventually feel that gap.",
-    vehicleAggression:
-      "Recurring charges operate most effectively in the space your awareness left. Subscriptions, interest, fees — they compound in the dark.",
-    delusionScore:
-      "You're not deluded — you're deliberately not looking. That distinction matters, and it's actually harder to fix than genuine unawareness.",
+    metricLabels: ["Awareness Deficit™", "Passive Drift Index™", "Confrontation Lag™"],
+    metric1:
+      "The gap between what's happening in your finances and what you're actively monitoring. This gap has a cost — it just gets charged with a delay.",
+    metric2:
+      "Charges and obligations accumulating inside your awareness gap. The less attention you direct here, the more autonomously this number grows.",
+    metric3:
+      "How far you currently are from the financial reality you've been postponing. The lag compounds — every month of avoidance increases the eventual confrontation cost.",
     survivability: "UNSTABLE",
     financialPressure: "MODERATE-HIGH",
     risks: [
       "No financial feedback loop means problems compound undetected until a threshold event forces the conversation",
-      "Account avoidance is functionally equivalent to ignoring symptoms and hoping they resolve on their own",
-      "Passive charges grow most aggressively inside awareness gaps — your subscriptions know this",
-      "The moment you finally look will feel significantly worse than if you'd been looking regularly",
+      "Passive charges grow most aggressively in awareness gaps — subscriptions and interest work best when unmonitored",
+      "Each month of avoidance increases the psychological cost of eventually looking, making it easier to keep not looking",
+      "The moment you finally check will feel significantly worse than if you'd been checking regularly",
     ],
     recoveryLevers: [
       {
         lead: "Do one look. Just one.",
-        body: "Pull every account balance this week. Don't do anything with it yet. Just know the actual number.",
+        body: "Pull every account balance this week. Don't act on it yet. Just know the actual number.",
       },
       {
         lead: "Automate the feedback you're avoiding.",
-        body: "Set weekly balance notifications. Let the number reach you passively so avoidance requires active effort.",
+        body: "Set weekly balance notifications. Let the number reach you passively so avoidance requires active effort to maintain.",
       },
       {
         lead: "Start with subscriptions.",
-        body: "Easiest win. Cancel everything you can't name without looking. Resubscribe only to what you notice missing.",
+        body: "Cancel everything you can't name without looking. Resubscribe only to what you notice missing.",
       },
       {
-        lead: "Name what you're afraid to find.",
-        body: "Write it down — the specific number or situation you've been avoiding. Naming it reduces its power over your behavior.",
+        lead: "Name the specific thing you're avoiding.",
+        body: "Write it down — the number, the account, the conversation. Naming it precisely reduces its psychological power.",
       },
     ],
   },
@@ -140,42 +159,42 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
   paycheck_hostage: {
     level: "Cash Flow Dependent",
     archetype: "The Paycheck Hostage",
-    color: "text-red-500",
     insight:
       "Your finances work exactly as designed — until one variable changes. That's not a budget. That's a system with no fault tolerance.",
     pattern: "Income-Dependent Financial Architecture",
     blindSpot:
       "When nothing has gone wrong, the fragility is invisible. The system feels stable because it hasn't been tested. That is not the same as actually being stable.",
-    relationshipRisk:
-      "Financial fragility creates a specific kind of relationship stress — one that only surfaces in emergencies, exactly when you have the least capacity to handle it.",
-    vehicleAggression:
-      "Fixed monthly obligations that made sense at one income level become structural vulnerabilities the moment anything shifts.",
-    delusionScore:
-      "The math works right now. The problem is 'right now' is doing a lot of load-bearing in that sentence.",
+    metricLabels: ["Income Fragility™", "Buffer Deficit™", "Cascade Risk™"],
+    metric1:
+      "How dependent your current financial structure is on consistent, uninterrupted income. High fragility means one disruption has disproportionate consequences.",
+    metric2:
+      "The gap between your current obligations and your capacity to absorb unexpected costs. The smaller this gap, the less room the system has to breathe.",
+    metric3:
+      "The probability that one financial disruption triggers a second. Systems without buffers tend to fail in sequences, not single events.",
     survivability: "CRITICAL",
     financialPressure: "SEVERE",
     risks: [
-      "A two-week income disruption would require debt, borrowing, or significant lifestyle contraction",
-      "Your fixed obligations leave no buffer for irregular-but-inevitable expenses",
-      "One health event, job disruption, or major repair can trigger a cascade with no recovery mechanism",
-      "The system has no capacity to absorb change without structural damage",
+      "A two-week income disruption requires debt, borrowing, or immediate lifestyle contraction",
+      "Fixed obligations leave no capacity for irregular-but-inevitable expenses",
+      "One health event, job disruption, or major repair can trigger a cascade with no built-in recovery",
+      "The system has no mechanism for absorbing change without structural damage",
     ],
     recoveryLevers: [
       {
         lead: "Build $500 before anything else.",
-        body: "Not a full emergency fund. Just $500 of actual insulation between you and the next thing. One number. Start there.",
+        body: "Not a full emergency fund. Just $500 of actual insulation between you and the next disruption. One number. Start there.",
       },
       {
-        lead: "Total your fixed monthly obligations.",
-        body: "List every one. Calculate how many days of income they require. That number is your actual fragility index.",
+        lead: "List every fixed monthly obligation.",
+        body: "Total them. Calculate how many days of income they require. That number is your actual fragility index.",
       },
       {
         lead: "Find one reducible fixed cost.",
-        body: "Insurance, a subscription audit, a rate renegotiation — one commitment you can lower this month. Small but structural.",
+        body: "One rate negotiation, one subscription audit, one insurance review. Small, but structural.",
       },
       {
-        lead: "Identify your most likely disruption.",
-        body: "What's the single most probable thing that could interrupt income or add a major expense? Have a plan for just that one thing.",
+        lead: "Plan for one specific disruption.",
+        body: "What's the single most probable thing that could interrupt your income or add a major expense? Have a plan for just that scenario.",
       },
     ],
   },
@@ -183,42 +202,42 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
   optimistic_drifter: {
     level: "Optimistically Underwater",
     archetype: "The Optimistic Drifter",
-    color: "text-yellow-500",
     insight:
-      "Your financial confidence is genuine — it's just attached to a version of the future that hasn't happened yet. You're spending from that future while living in the present.",
+      "Your financial confidence is genuine. It's calibrated to a version of your life that hasn't fully arrived yet — and in the meantime, the current version is running on credit.",
     pattern: "Future-Income Anchored Spending",
     blindSpot:
-      "Optimism about income trajectory is usually accurate. The error is treating projected income as if it's already arrived. The gap between now and then is where the financial damage accumulates.",
-    relationshipRisk:
-      "People who share finances with optimistic drifters often carry a disproportionate amount of financial anxiety — one person's optimism becomes the other person's job to absorb.",
-    vehicleAggression:
-      "Commitments made based on expected future income are structurally identical to commitments made on credit. They work if the assumption holds.",
-    delusionScore:
-      "The vision is probably right. The timeline is probably generous. The math in the middle doesn't care about either.",
+      "Optimism about income trajectory is often accurate. The error is treating projected income as already arrived. The gap between now and then doesn't pause while you wait.",
+    metricLabels: ["Projection Gap™", "Commitment Overhang™", "Timeline Risk™"],
+    metric1:
+      "The distance between what your current spending assumes about your income and where your income actually is right now.",
+    metric2:
+      "Financial commitments that make sense in the future scenario but create friction in the present one. This is where optimism meets cash flow.",
+    metric3:
+      "How exposed you are if the income improvement or life change arrives later than projected. The risk isn't the goal — it's the dependency on the timeline.",
     survivability: "MODERATE",
     financialPressure: "MODERATE",
     risks: [
-      "Current financial commitments are calibrated to income you don't have yet",
-      "Optimism bias reliably delays corrective action until the cost is significantly higher",
-      "The gap between current and expected income is being bridged by debt or quiet depletion",
+      "Current commitments are calibrated to income you're projecting, not income you have",
+      "The delay between now and the expected improvement isn't financial downtime — it accumulates",
       "When the income increase arrives, lifestyle will have already expanded to absorb it",
+      "Optimism about outcomes is often right; optimism about timelines almost never is",
     ],
     recoveryLevers: [
       {
-        lead: "Stress-test the timeline.",
-        body: "What if the raise or opportunity takes 18 months instead of 6? Does the math still work? Run that version.",
+        lead: "Run the 18-month scenario.",
+        body: "What if the raise or opportunity takes 18 months instead of 6? Does the math still hold? Model that version.",
       },
       {
-        lead: "Separate hope from plan.",
-        body: "What you expect to happen is not a financial plan. Write down what happens if it doesn't.",
+        lead: "Separate the hope from the plan.",
+        body: "What you expect to happen is a forecast, not a budget. Write down what happens financially if it doesn't.",
       },
       {
         lead: "Reduce one forward-leaning commitment.",
-        body: "Identify the financial commitment most dependent on future income and find one way to reduce its footprint now.",
+        body: "The financial commitment most dependent on future income — find one way to reduce its footprint right now.",
       },
       {
-        lead: "Let current income be enough. Temporarily.",
-        body: "Live within actual earnings for 60 days and observe what has to change. That's the real picture.",
+        lead: "Let current income be enough, temporarily.",
+        body: "Live within actual earnings for 60 days. Observe what has to change. That's the real picture.",
       },
     ],
   },
@@ -226,30 +245,30 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
   lifestyle_maxxer: {
     level: "Lifestyle Leveraged",
     archetype: "The Lifestyle Maxxer",
-    color: "text-red-500",
     insight:
       "You've calibrated your life to your best months, not your average ones. The gap between those two numbers is where your financial stability used to be.",
     pattern: "Lifestyle Calibrated to Peak Income",
     blindSpot:
-      "Lifestyle inflation is invisible from the inside because each upgrade felt reasonable in context. The problem isn't any single decision — it's the aggregated baseline they created together.",
-    relationshipRisk:
-      "Lifestyle creep affects shared finances asymmetrically. The person more attached to the upgraded baseline becomes the implicit veto on any correction.",
-    vehicleAggression:
-      "Each layer of lifestyle was added during a period of relative abundance. Together they form a fixed cost structure that doesn't compress easily.",
-    delusionScore:
-      "You can probably point to the income that justified each upgrade. The issue is the income wasn't as permanent as the lifestyle became.",
+      "Lifestyle inflation is invisible from the inside because each upgrade felt reasonable in context. The problem isn't any single decision — it's the fixed cost floor they created together.",
+    metricLabels: ["Baseline Inflation™", "Compression Resistance™", "Peak Dependency™"],
+    metric1:
+      "How elevated your fixed cost baseline is relative to your average monthly income. The higher this number, the less your finances can weather a below-average month.",
+    metric2:
+      "How psychologically difficult it would be to reduce your current lifestyle. High compression resistance means the baseline has normalized — it no longer feels optional.",
+    metric3:
+      "How much of your financial stability depends on income staying at or near its highest point. The more peak-dependent the system, the less resilient it is to normal income variation.",
     survivability: "UNSTABLE",
     financialPressure: "HIGH",
     risks: [
-      "Your baseline expenses were calibrated to income peaks, not sustainable averages",
-      "Lifestyle compression is psychologically painful in exact proportion to how normalized the level has become",
-      "Each upgrade added fixed costs that don't automatically reduce if income changes",
+      "Your baseline expenses were calibrated to peak months, not the average ones that make up most of the year",
+      "Lifestyle compression is psychologically painful in proportion to how normal the current level feels",
+      "Each upgrade added fixed costs that don't automatically reduce if income fluctuates",
       "The most dangerous phase is when the lifestyle feels completely normal — that's when it's most entrenched",
     ],
     recoveryLevers: [
       {
-        lead: "Identify the last three lifestyle upgrades.",
-        body: "Anything in the last two years that added a recurring cost. Evaluate each independently against your actual average income, not your peak.",
+        lead: "List the last three recurring upgrades.",
+        body: "Anything in the last two years that added a fixed monthly cost. Evaluate each against your average income, not your best month.",
       },
       {
         lead: "Find the one you'd miss least.",
@@ -257,54 +276,54 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
       },
       {
         lead: "Freeze the baseline for 90 days.",
-        body: "No new subscriptions, no lifestyle additions. Observe what the current baseline actually costs to maintain.",
+        body: "No new subscriptions, no lifestyle additions. Observe what it actually costs to sustain the current level.",
       },
       {
-        lead: "Calculate the gap number.",
-        body: "Difference between average monthly income and fixed monthly obligations. That number is your actual financial margin.",
+        lead: "Calculate the real margin number.",
+        body: "Average monthly income minus fixed obligations. That number — not the burn score — is your actual financial situation.",
       },
     ],
   },
 
   convenience_economy: {
-    level: "Friction-Free and Cooked",
+    level: "Frictionlessly Broke",
     archetype: "The Convenience Economy",
-    color: "text-yellow-500",
     insight:
-      "You've learned that friction disappears when you pay for it. The problem isn't that this is wrong — it's that you've applied this logic in more places than your budget was built for.",
+      "You've outsourced the parts of daily life that feel like too much right now. The problem isn't any single outsourcing decision — it's that you've applied this logic to more situations than your budget was designed for.",
     pattern: "Friction-Avoidance as Primary Spending Driver",
     blindSpot:
-      "Convenience spending feels small per transaction, which is the exact reason it's so effective at accumulating. No single purchase looks like the problem.",
-    relationshipRisk:
-      "Convenience spending tends to be invisible in shared finances because each transaction is individually defensible. The pattern only becomes visible in aggregate.",
-    vehicleAggression:
-      "The convenience premium compounds across food, transportation, services, and time. It feels like efficiency. It bills like a second rent.",
-    delusionScore:
-      "The math is hidden inside the individual transactions. Each one is fine. All of them together is a different conversation.",
+      "Convenience spending feels small per transaction, which is the exact reason it's so effective at accumulating. No individual purchase looks like the problem. The pattern is.",
+    metricLabels: ["Friction Premium™", "Visibility Deficit™", "Habit Entrenchment™"],
+    metric1:
+      "The aggregate cost of paying to remove friction from daily life. Locally reasonable. Globally, this number tends to surprise people the first time they add it up.",
+    metric2:
+      "Convenience spending is structurally difficult to track because it happens in small, frequent, individually defensible transactions. This reflects how much is operating outside your awareness.",
+    metric3:
+      "How deeply embedded the convenience patterns are. High entrenchment means these habits have high emotional stickiness — they don't respond to willpower-based approaches.",
     survivability: "MODERATE",
     financialPressure: "MODERATE",
     risks: [
-      "Convenience spending is structurally invisible because it happens in small, individually defensible increments",
-      "Food delivery and convenience services have high emotional stickiness — they're difficult to remove once normalized",
-      "The aggregate cost of friction-avoidance spending often rivals a fixed monthly bill",
-      "This pattern accelerates during stressful periods, exactly when the budget has the least capacity",
+      "The aggregate cost of convenience spending often rivals a fixed monthly bill — it's just spread across dozens of transactions",
+      "Each individual transaction is defensible, which makes the pattern nearly invisible until you add a month together",
+      "Convenience habits accelerate during stressful periods, exactly when budget capacity is lowest",
+      "High entrenchment means reducing these patterns requires systems, not willpower",
     ],
     recoveryLevers: [
       {
-        lead: "Total one month of convenience spending.",
-        body: "Add every delivery, rideshare, prepared meal, and paid convenience service for 30 days. The number is usually clarifying.",
+        lead: "Add up one month. Just look at the total.",
+        body: "Every delivery, rideshare, prepared meal, and paid convenience for 30 days. The number is usually the motivation.",
       },
       {
-        lead: "Identify the highest-cost friction you pay to avoid.",
-        body: "One habit, converted to a monthly number, usually creates the motivation to change it.",
+        lead: "Find the highest-cost single habit.",
+        body: "One pattern, converted to a monthly number. That number, made visible, usually does more than a general spending plan.",
       },
       {
         lead: "Batch instead of eliminate.",
-        body: "One grocery run covers five delivery orders. One cooking session covers a week. Consolidation, not deprivation.",
+        body: "One grocery run covers five delivery orders. Consolidation, not deprivation — the friction is mostly in the decision, not the task.",
       },
       {
         lead: "Give convenience a line item.",
-        body: "A defined monthly number converts it from an invisible leak to a managed expense. The amount matters less than the awareness.",
+        body: "A defined monthly budget converts it from an invisible leak to a managed expense. The amount matters less than the constraint.",
       },
     ],
   },
@@ -312,34 +331,34 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
   status_investor: {
     level: "Identity-Forward",
     archetype: "The Status Investor",
-    color: "text-yellow-500",
     insight:
-      "Your spending tells a story about who you're becoming. The math reflects who you are right now. There's a meaningful gap between those two versions, and you're currently funding both.",
+      "Your spending tells a story about who you're becoming. Your balance sheet tells a different story about who you are right now. You're currently funding both versions simultaneously.",
     pattern: "Identity-Forward Financial Behavior",
     blindSpot:
-      "Status and identity spending is uniquely resistant to correction because it isn't irrational — it's aspirational. The purchases feel like investments in a future self. The balance sheet doesn't agree yet.",
-    relationshipRisk:
-      "Identity-anchored spending creates financial asymmetry in relationships — one person is building a self-image, the other is funding a vision they may not fully share.",
-    vehicleAggression:
-      "Commitments made for identity reasons are harder to exit than purely financial ones. The cost isn't just money — it's narrative.",
-    delusionScore:
-      "The aspirational logic is internally consistent. The problem is aspirational spending at current-self income creates a version of you the math doesn't support yet.",
+      "Status spending is uniquely resistant to correction because it isn't irrational — it's aspirational. The purchases feel like investments in a future self. The balance sheet disagrees about the timeline.",
+    metricLabels: ["Narrative Leverage™", "Identity Lock™", "Aspirational Gap™"],
+    metric1:
+      "How much of your current spending is attached to the story of who you're becoming rather than who you currently are financially. Leverage isn't inherently bad — the ratio is.",
+    metric2:
+      "How difficult your current identity-anchored commitments would be to exit. The cost isn't just financial — it's narrative, and that makes it harder to quantify and harder to reduce.",
+    metric3:
+      "The distance between the financial behavior of your aspirational self and the actual capacity of your current financial situation. This gap is meant to close — the question is from which direction.",
     survivability: "MODERATE",
     financialPressure: "MODERATE",
     risks: [
-      "Aspirational spending requires an income level you may not have reached yet",
-      "Identity-anchored commitments are psychologically expensive to reverse — the cost isn't just financial",
-      "The gap between self-image and financial reality tends to widen before it narrows",
-      "Status spending crowds out savings and investment that would actually close the gap",
+      "Aspirational spending requires an income or financial position you may not have reached yet",
+      "Identity-anchored commitments are psychologically expensive to reverse — the resistance is rarely about money",
+      "Status spending consistently crowds out the savings and investment that would actually close the aspirational gap",
+      "The gap between self-image and financial reality tends to widen before external feedback narrows it",
     ],
     recoveryLevers: [
       {
-        lead: "Separate identity from spending.",
-        body: "List the three things you spend on primarily for how they look or feel. Ask: what would change if these were invisible to others?",
+        lead: "Separate the identity from the spending.",
+        body: "Name three things you spend on primarily for how they signal something. Ask: what would change if these were invisible to others?",
       },
       {
-        lead: "Invest in the actual version, not the aspired one.",
-        body: "Skills, credentials, relationships that move you toward your aspirational self cost less and compound more than the aesthetic of it.",
+        lead: "Invest in the actual version, not the projected one.",
+        body: "Skills, credentials, relationships that move toward the aspirational self cost less and compound more than the aesthetic of it.",
       },
       {
         lead: "Find the identity spend that isn't earning its keep.",
@@ -347,7 +366,7 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
       },
       {
         lead: "Redirect one aspirational spend toward an aspirational asset.",
-        body: "Whatever you spend to project the next version of yourself — redirect a portion to the financial foundation that version actually requires.",
+        body: "Whatever you spend to project the next version of yourself — redirect part of it to the financial foundation that version requires.",
       },
     ],
   },
@@ -355,42 +374,42 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
   normalized: {
     level: "Pressure-Adapted",
     archetype: "The Normalized",
-    color: "text-red-500",
     insight:
-      "You've been under financial pressure long enough that it stopped feeling like pressure. That's not adaptation — it's desensitization, and it removes the signal that would motivate you to change.",
+      "You've been under financial pressure long enough that it stopped feeling like pressure. That's not adaptation — it's the loss of the signal that would otherwise motivate you to change.",
     pattern: "Normalized Financial Instability",
     blindSpot:
-      "When nothing has broken yet, the system feels stable. But 'nothing has broken' and 'stable' are not the same thing. The absence of a crisis is not financial health.",
-    relationshipRisk:
-      "Normalized financial pressure tends to become ambient relationship tension — always present, never directly addressed, because it's started to feel like just how things are.",
-    vehicleAggression:
-      "Debt that's been present long enough stops feeling like a choice. It starts feeling like weather — something you manage around rather than something you can change.",
-    delusionScore:
-      "You haven't lost the ability to see the problem. You've lost the urgency to act on it. That's the specific risk profile here, and it's harder to fix than denial.",
+      "When nothing has broken yet, the system feels stable. But 'nothing has broken yet' and 'stable' are not the same condition. The absence of a crisis is not financial health.",
+    metricLabels: ["Pressure Threshold™", "Signal Deficit™", "Crisis Readiness™"],
+    metric1:
+      "How much financial pressure you've normalized. A high threshold means you've adapted to conditions that would register as alarming to someone experiencing them for the first time.",
+    metric2:
+      "How clearly you can still detect when your financial situation is deteriorating. Prolonged normalization degrades the internal alarm system that drives corrective behavior.",
+    metric3:
+      "Your current capacity to absorb a financial disruption without it escalating. Low readiness paired with high normalization is a specific and underappreciated risk profile.",
     survivability: "CRITICAL",
     financialPressure: "SEVERE",
     risks: [
-      "Desensitization to financial pressure removes the signal that normally triggers corrective behavior",
-      "Long-term debt normalization is one of the strongest predictors of sustained financial instability",
-      "The absence of acute crisis can mask chronic financial deterioration until it becomes structurally irreversible",
-      "Normalized pressure calibrates your risk tolerance upward, enabling increasingly poor financial decisions",
+      "Desensitization to financial pressure removes the signal that normally triggers corrective behavior before a threshold is crossed",
+      "Long-term debt normalization is one of the strongest predictors of sustained, compounding financial instability",
+      "Chronic financial pressure can mask gradual deterioration until it becomes structurally irreversible",
+      "Normalized pressure calibrates your risk tolerance upward — enabling decisions that would otherwise register as clearly bad",
     ],
     recoveryLevers: [
       {
         lead: "Recalibrate what 'fine' actually means.",
-        body: "Write your actual numbers: total debt, monthly obligations, monthly net. Then evaluate whether 'fine' is accurate or just familiar.",
+        body: "Write down actual numbers: total debt, monthly obligations, monthly net income. Then evaluate whether 'fine' is accurate or just familiar.",
       },
       {
         lead: "Treat debt like an active problem again.",
-        body: "Not guilt — urgency. Pick the smallest debt and eliminate it within 90 days. The goal is to reactivate the feedback loop.",
+        body: "Not guilt — urgency. Pick the smallest debt and build a plan to eliminate it within 90 days. The goal is to reactivate the feedback loop.",
       },
       {
-        lead: "Find the number that would create real movement.",
-        body: "What monthly amount, redirected toward debt, would generate visible progress? Even $50 reactivates momentum.",
+        lead: "Find the monthly number that creates real movement.",
+        body: "What amount, redirected toward debt, would generate visible progress within 6 months? Even a small number reactivates momentum.",
       },
       {
         lead: "Name the normalization out loud.",
-        body: "To someone. The pattern of financial pressure feeling normal needs to be a stated thing before it can become a changed thing.",
+        body: "To someone. The pattern of financial pressure feeling normal needs to be stated before it can be changed.",
       },
     ],
   },
@@ -398,40 +417,40 @@ const ARCHETYPES: Record<string, BehavioralProfile> = {
   low_risk: {
     level: "Quietly Functional",
     archetype: "The Functional Adult",
-    color: "text-emerald-400",
     insight:
-      "Your finances appear more together than you probably give yourself credit for. The patterns here suggest awareness, not avoidance — which puts you in a smaller category than you might expect.",
+      "Your financial behavior reflects awareness and some degree of structure. The patterns here don't show the warning signs that reliably predict instability — which puts you in a smaller group than you might expect.",
     pattern: "Low Behavioral Risk Profile",
     blindSpot:
-      "The risk for financially functional people is complacency, not crisis. The system works until one assumption quietly stops being true, and the absence of urgency means you might not notice.",
-    relationshipRisk:
-      "Financial health doesn't make conversations about money easier — it makes them less urgent. That's different from unnecessary.",
-    vehicleAggression:
-      "Lower financial pressure creates its own blind spot: the sense that since nothing's wrong, nothing needs attention.",
-    delusionScore:
-      "Relatively grounded. The main risk is overconfidence from a period of stability rather than from structural soundness.",
+      "Financial stability creates a specific blind spot: the sense that because nothing's wrong, nothing needs attention. The habits that keep a system stable require maintenance, not just existence.",
+    metricLabels: ["Resilience Index™", "Awareness Score™", "Stability Margin™"],
+    metric1:
+      "Your structural capacity to absorb financial disruption without cascading consequences. Resilience is different from current stability — it's how the system performs under stress.",
+    metric2:
+      "How closely your financial behavior tracks your financial awareness. High alignment means fewer surprises in either direction.",
+    metric3:
+      "The buffer between your current obligations and your income. Your margin determines how much the system can flex before something has to give.",
     survivability: "STABLE",
     financialPressure: "LOW",
     risks: [
-      "Stability can mask the gradual erosion of good habits during life transitions",
-      "Financial health requires active maintenance — not just the absence of crisis",
+      "Stability can quietly erode during major life transitions when the conditions that created it change",
+      "Financial health requires active maintenance — the absence of crisis isn't a strategy",
     ],
     recoveryLevers: [
       {
-        lead: "Document what's working.",
-        body: "The habits that got you here are worth writing down so they survive major lifestyle changes.",
+        lead: "Document what's actually working.",
+        body: "The habits and decisions that got you here are worth writing down — they don't survive major lifestyle changes automatically.",
       },
       {
-        lead: "Stress-test the system.",
-        body: "What's the single disruption most likely to challenge your current stability? Have a plan for just that one scenario.",
+        lead: "Stress-test one scenario.",
+        body: "What's the single disruption most likely to challenge your current stability? Build one specific plan for that scenario.",
       },
       {
-        lead: "Convert stability into growth.",
-        body: "Financial stability is most valuable when it's actively used to build future resilience, not just maintained.",
+        lead: "Convert stability into forward momentum.",
+        body: "Financial stability is most valuable when it's actively used to build future resilience, not just maintained as a current condition.",
       },
       {
-        lead: "Stay curious about the behavioral patterns.",
-        body: "The risks that don't affect you now tend to emerge during specific life transitions. Worth understanding before you're in one.",
+        lead: "Stay ahead of the behavioral patterns.",
+        body: "The risks that don't affect you now tend to appear during specific life transitions — income changes, relationship shifts, major purchases. Understanding them in advance is the advantage.",
       },
     ],
   },
@@ -449,12 +468,12 @@ export function determineFinancialProfile(
   burnScore: number,
   answers: Record<string, any> = {}
 ): BehavioralProfile {
-  // Low score → functional profile regardless of pattern
-  if (burnScore < 28) {
-    return { ...ARCHETYPES.low_risk, color: "text-emerald-400" };
+  const metricScores = calculateMetricScores(answers);
+
+  if (burnScore < 28 || Object.keys(answers).length === 0) {
+    return { ...ARCHETYPES.low_risk, color: "text-emerald-400", metricScores };
   }
 
-  // Count weighted behavioral tags across all answers
   const tagCounts: Record<string, number> = {};
   Object.values(answers).forEach((answer: any) => {
     if (answer?.tags) {
@@ -464,7 +483,6 @@ export function determineFinancialProfile(
     }
   });
 
-  // Find dominant behavioral tag
   let dominantTag = "optimist_bias";
   let maxCount = 0;
   Object.entries(tagCounts).forEach(([tag, count]) => {
@@ -477,12 +495,11 @@ export function determineFinancialProfile(
   const archetypeKey = TAG_TO_ARCHETYPE[dominantTag] || "optimistic_drifter";
   const base = ARCHETYPES[archetypeKey] || ARCHETYPES.optimistic_drifter;
 
-  // Override color based on burn score severity
-  let color = base.color;
+  let color = "text-orange-500";
   if (burnScore >= 75) color = "text-red-500";
   else if (burnScore >= 55) color = "text-orange-500";
   else if (burnScore >= 35) color = "text-yellow-500";
   else color = "text-emerald-400";
 
-  return { ...base, color };
+  return { ...base, color, metricScores };
 }
