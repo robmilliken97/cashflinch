@@ -152,7 +152,7 @@ function QuizSection() {
   const burnScore = calculateBurnScore(answers);
   const progress = ((step + 1) / quizQuestions.length) * 100;
   const personalizedRoasts = generateRoasts(answers);
-  const result = determineFinancialProfile(burnScore);
+  const result = determineFinancialProfile(burnScore, answers);
 
   const handleAnswer = (option: any) => {
     const updated = { ...answers, [currentQuestion.id]: option };

@@ -3,8 +3,6 @@ import "./globals.css";
 import { Analytics } from "@vercel/analytics/react";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://cashflinch.com"),
-
   title: "CashFlinch — Are your finances secretly destroying you?",
   description:
     "Behavioral finance diagnosis. Find out your Burn Score and exactly how cooked your money situation really is.",

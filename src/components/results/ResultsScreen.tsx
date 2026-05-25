@@ -11,12 +11,6 @@ interface ResultsScreenProps {
   onRetake?: () => void;
 }
 
-const recoveryItems = [
-  { lead: "1-month emergency fund.", body: "Start with $500. The bar is low and still out of reach." },
-  { lead: "Audit subscriptions.", body: "Cancel everything. Resubscribe only to what you notice missing." },
-  { lead: "Pay above minimum.", body: "Even $20 extra changes the math significantly." },
-  { lead: "Name one financial boundary", body: "with your partner. One conversation, this week." },
-];
 
 const colorToBg: Record<string, string> = {
   "text-red-500": "bg-red-500",
@@ -123,11 +117,16 @@ export function ResultsScreen({
                   </span>
                 </div>
                 <h2
-                  className="font-display italic leading-[1.05] tracking-[-0.01em] text-white mb-5"
+                  className="font-display italic leading-[1.05] tracking-[-0.01em] text-white mb-3"
                   style={{ fontSize: "clamp(38px, 4vw, 56px)" }}
                 >
                   {result.archetype}
                 </h2>
+                {result.pattern && (
+                  <p className="font-data text-[11px] tracking-[0.08em] uppercase text-orange-500/60 mb-5">
+                    {result.pattern}
+                  </p>
+                )}
                 <p className="text-[15px] text-zinc-400 leading-[1.65] max-w-[420px] font-light">
                   {result.insight}
                 </p>
@@ -245,7 +244,7 @@ export function ResultsScreen({
                     Recovery Protocol
                   </p>
                   <div>
-                    {recoveryItems.map((item, i) => (
+                    {(result.recoveryLevers || []).map((item: { lead: string; body: string }, i: number) => (
                       <div
                         key={i}
                         className="flex gap-[14px] py-[13px] border-b border-white/[0.05] last:border-b-0 items-start"
