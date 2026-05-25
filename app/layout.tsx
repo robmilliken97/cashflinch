@@ -13,14 +13,17 @@ export const metadata: Metadata = {
     title: "CashFlinch — Are your finances secretly destroying you?",
     description:
       "Behavioral finance diagnosis. Find out your Burn Score and exactly how cooked your money situation really is.",
+    url: "https://cashflinch.com",
+    siteName: "CashFlinch",
     images: [
       {
-        url: "/og-image.svg",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "CashFlinch — Behavioral Finance Report",
       },
     ],
+    locale: "en_US",
     type: "website",
   },
 
@@ -29,7 +32,7 @@ export const metadata: Metadata = {
     title: "CashFlinch — Are your finances secretly destroying you?",
     description:
       "Behavioral finance diagnosis. Find out your Burn Score and exactly how cooked your money situation really is.",
-    images: ["/og-image.svg"],
+    images: ["/og-image.png"],
   },
 
   icons: {
