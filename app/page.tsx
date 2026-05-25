@@ -20,15 +20,12 @@ const rotatingMessages = [
   "Your subscriptions are getting confident.",
 ];
 
-
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-
     window.addEventListener("scroll", onScroll);
-
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -50,11 +47,9 @@ function Navbar() {
           <a href="#features" className="hover:text-white transition-colors">
             Features
           </a>
-
           <a href="#quiz" className="hover:text-white transition-colors">
             Quiz
           </a>
-
           <a
             href="#quiz"
             className="px-5 py-2 rounded-xl bg-orange-500 hover:bg-orange-400 text-black font-semibold transition-all"
@@ -80,13 +75,71 @@ function FeatureCard({
       className="group relative overflow-hidden rounded-3xl border border-white/[0.06] bg-white/[0.03] p-8 hover:border-orange-500/30 transition-all duration-500"
     >
       <div className="absolute inset-0 bg-gradient-to-br from-orange-500/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-
       <div className="relative z-10">
         <h3 className="text-2xl font-bold text-white mb-4">{title}</h3>
-
         <p className="text-zinc-400 leading-relaxed">{description}</p>
       </div>
     </motion.div>
+  );
+}
+
+function SampleReport() {
+  return (
+    <section id="sample-report" className="border-t border-white/[0.05] py-20">
+      <div className="max-w-3xl mx-auto px-6">
+        <p className="font-data text-xs tracking-[0.18em] uppercase text-zinc-500 mb-8">
+          Sample Burn Report
+        </p>
+        <div className="rounded-[20px] border border-white/[0.08] bg-[#111113] overflow-hidden">
+          <div className="grid grid-cols-[1fr_auto] items-start gap-6 px-8 md:px-12 pt-10 pb-8 md:pt-12 md:pb-10 border-b border-white/[0.06]">
+            <div>
+              <div className="flex items-center gap-2 mb-5">
+                <span className="w-[5px] h-[5px] rounded-full bg-orange-500 shrink-0" />
+                <span className="font-data text-[11px] tracking-[0.09em] uppercase text-zinc-500">
+                  Behavioral Finance Report &middot; CashFlinch
+                </span>
+              </div>
+              <h3
+                className="font-display italic leading-[1.05] tracking-[-0.01em] text-white mb-4"
+                style={{ fontSize: "clamp(28px, 3.5vw, 42px)" }}
+              >
+                The Lifestyle Maxxer
+              </h3>
+              <p
+                className="font-display italic text-zinc-400 leading-[1.55]"
+                style={{ fontSize: "clamp(15px, 1.6vw, 18px)" }}
+              >
+                &ldquo;You earn enough to feel comfortable and spend enough to
+                ensure you never actually are.&rdquo;
+              </p>
+            </div>
+            <div className="text-right shrink-0">
+              <p className="font-data text-[10px] tracking-[0.1em] uppercase text-zinc-500 mb-2">
+                Burn Score
+              </p>
+              <p
+                className="font-display italic leading-none tracking-[-0.02em] text-orange-500"
+                style={{ fontSize: "72px" }}
+              >
+                74
+              </p>
+              <p className="font-data text-[11px] text-zinc-600 mt-1">/ 100</p>
+            </div>
+          </div>
+          <div className="px-8 md:px-12 py-6 flex items-center justify-between gap-4 flex-wrap">
+            <p className="text-sm text-zinc-500 font-light leading-relaxed">
+              Your report reflects your actual answers. This is just a preview.
+            </p>
+            <a
+              href="#quiz"
+              className="font-data text-xs tracking-[0.07em] uppercase text-orange-400 hover:text-orange-300 transition-colors shrink-0"
+            >
+              Generate yours &rarr;
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -97,26 +150,18 @@ function QuizSection() {
 
   const currentQuestion = quizQuestions[step];
   const burnScore = calculateBurnScore(answers);
-
   const progress = ((step + 1) / quizQuestions.length) * 100;
   const personalizedRoasts = generateRoasts(answers);
   const result = determineFinancialProfile(burnScore);
 
   const handleAnswer = (option: any) => {
-    const updated = {
-      ...answers,
-      [currentQuestion.id]: option,
-    };
-
+    const updated = { ...answers, [currentQuestion.id]: option };
     setAnswers(updated);
 
     if (step < quizQuestions.length - 1) {
-      setTimeout(() => {
-        setStep(step + 1);
-      }, 250);
+      setTimeout(() => setStep(step + 1), 250);
     } else {
       setLoading(true);
-
       setTimeout(() => {
         setLoading(false);
         setStep(step + 1);
@@ -144,7 +189,6 @@ function QuizSection() {
       <section className="py-32 border-t border-white/[0.05]">
         <div className="max-w-3xl mx-auto px-6 text-center">
           <div className="w-12 h-12 border-2 border-orange-500/20 border-t-orange-500 rounded-full animate-spin mx-auto mb-10" />
-
           <motion.h2
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -153,7 +197,6 @@ function QuizSection() {
           >
             Generating Burn Report...
           </motion.h2>
-
           <div className="space-y-3">
             {loadingLines.map((line, i) => (
               <motion.p
@@ -184,20 +227,13 @@ function QuizSection() {
   }
 
   return (
-    <section
-      id="quiz"
-      className="py-32 border-t border-white/[0.05]"
-    >
+    <section id="quiz" className="py-32 border-t border-white/[0.05]">
       <div className="max-w-3xl mx-auto px-6">
         <div className="mb-10">
           <div className="flex items-center justify-between text-sm text-zinc-500 mb-4">
-            <span>
-              Question {step + 1} of {quizQuestions.length}
-            </span>
-
+            <span>Question {step + 1} of {quizQuestions.length}</span>
             <span>{Math.round(progress)}%</span>
           </div>
-
           <div className="w-full h-2 bg-white/[0.05] rounded-full overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
@@ -206,12 +242,11 @@ function QuizSection() {
             />
           </div>
         </div>
-
         <QuestionCard
-  step={step}
-  currentQuestion={currentQuestion}
-  handleAnswer={handleAnswer}
-/>
+          step={step}
+          currentQuestion={currentQuestion}
+          handleAnswer={handleAnswer}
+        />
       </div>
     </section>
   );
@@ -222,11 +257,8 @@ export default function Home() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setMessageIndex(
-        (prev) => (prev + 1) % rotatingMessages.length
-      );
+      setMessageIndex((prev) => (prev + 1) % rotatingMessages.length);
     }, 3500);
-
     return () => clearInterval(interval);
   }, []);
 
@@ -236,9 +268,7 @@ export default function Home() {
 
       <section className="relative min-h-[90vh] flex items-center justify-center px-6 overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(249,115,22,0.15),transparent_40%)]" />
-
         <div className="absolute top-32 left-[-120px] w-[400px] h-[400px] bg-orange-500/10 blur-3xl rounded-full" />
-
         <div className="absolute bottom-0 right-[-120px] w-[350px] h-[350px] bg-emerald-500/5 blur-3xl rounded-full" />
 
         <div className="relative z-10 max-w-6xl mx-auto text-center pt-32">
@@ -268,10 +298,12 @@ export default function Home() {
             >
               Generate Burn Report
             </a>
-
-            <button className="px-8 py-4 rounded-2xl border border-zinc-700 hover:border-zinc-500 transition-all text-white font-semibold text-lg">
-              See How It Works
-            </button>
+            <a
+              href="#sample-report"
+              className="px-8 py-4 rounded-2xl border border-zinc-700 hover:border-zinc-500 transition-all text-white font-semibold text-lg"
+            >
+              View Sample Report
+            </a>
           </div>
 
           <p className="mt-8 text-sm text-zinc-500">
@@ -280,21 +312,15 @@ export default function Home() {
         </div>
       </section>
 
-      <section
-        id="features"
-        className="py-28 border-t border-white/[0.05]"
-      >
+      <section id="features" className="py-28 border-t border-white/[0.05]">
         <div className="max-w-7xl mx-auto px-6">
           <div className="max-w-3xl mb-16">
             <p className="text-orange-500 uppercase tracking-[0.2em] text-sm font-semibold mb-4">
               FEATURES
             </p>
-
             <h2 className="text-4xl md:text-5xl font-black leading-tight">
               Financial self-awareness
-              <span className="block text-zinc-500">
-                with consequences.
-              </span>
+              <span className="block text-zinc-500">with consequences.</span>
             </h2>
           </div>
 
@@ -303,24 +329,23 @@ export default function Home() {
               title="Burn Report"
               description="A behavioral breakdown of your financial habits, pressure points, and money patterns."
             />
-
             <FeatureCard
               title="Burn Score"
               description="A measure of how financially stressed and unstable your current situation may be."
             />
-
             <FeatureCard
               title="Lifestyle Drift"
               description="Track how your lifestyle quietly expanded while your financial stability disappeared."
             />
-
             <FeatureCard
-              title="Delusion Detection™"
+              title="Delusion Detection"
               description="Compare your income, spending habits, and financial confidence to objective reality."
             />
           </div>
         </div>
       </section>
+
+      <SampleReport />
 
       <QuizSection />
     </main>
